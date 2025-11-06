@@ -22,7 +22,7 @@ export const getThemeConfig = (_theme: ColorScheme): ThemeOption => ({
     grayscale: {
       hue: 0,
       tint: 8,
-      shade: -6,
+      shade: -4,
     },
     accent: {
       primary: "#bb0a30",
