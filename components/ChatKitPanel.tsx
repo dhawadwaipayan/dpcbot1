@@ -193,10 +193,7 @@ export function ChatKitPanel({
           body: JSON.stringify({
             workflow: { id: WORKFLOW_ID },
             chatkit_configuration: {
-              // enable attachments
-              file_upload: {
-                enabled: true,
-              },
+              file_upload: { enabled: true },
             },
           }),
         });
@@ -216,10 +213,7 @@ export function ChatKitPanel({
           try {
             data = JSON.parse(raw) as Record<string, unknown>;
           } catch (parseError) {
-            console.error(
-              "Failed to parse create-session response",
-              parseError
-            );
+            console.error("Failed to parse create-session response", parseError);
           }
         }
 
@@ -261,23 +255,32 @@ export function ChatKitPanel({
     [isWorkflowConfigured, setErrorState]
   );
 
+  // ---- ChatKit initialization with widget handler ----
   const { control, setComposerValue, focusComposer } = useChatKit({
     locale: "de-DE",
     api: { getClientSecret },
-    theme: { colorScheme: "light", ...getThemeConfig("light") },
+    theme: {
+      colorScheme: _theme, // use incoming theme to avoid unused-var warning
+      ...getThemeConfig(_theme),
+    },
     startScreen: { greeting: GREETING, prompts: STARTER_PROMPTS },
     composer: {
       placeholder: PLACEHOLDER_INPUT,
       attachments: { enabled: true },
     },
-    // ⬇️ NEW: handle widget button "In Eingabefeld übernehmen"
     widgets: {
-      onAction: async (action) => {
+      // Support both action.values and action.payload shapes to satisfy TS across SDK versions
+      onAction: async (
+        action: { type: string; payload?: Record<string, unknown> } & Record<
+          string,
+          unknown
+        >
+      ) => {
         if (action.type === "prompt.insert") {
-          const text =
-            typeof action.values?.prompt_text === "string"
-              ? action.values.prompt_text
-              : "";
+          const raw =
+            (action as any)?.values?.prompt_text ??
+            (action.payload as Record<string, unknown> | undefined)?.prompt_text;
+          const text = typeof raw === "string" ? raw : "";
           if (text.trim()) {
             await setComposerValue({ text });
             await focusComposer();
@@ -286,20 +289,28 @@ export function ChatKitPanel({
       },
     },
     threadItemActions: { feedback: false },
-    onClientTool: async (invocation: { name: string; params: Record<string, unknown> }) => {
+    onClientTool: async (invocation: {
+      name: string;
+      params: Record<string, unknown>;
+    }) => {
       if (invocation.name === "switch_theme") {
         const requested = invocation.params.theme;
         if (requested === "light") {
-          if (isDev) console.debug("[ChatKitPanel] switch_theme", requested);
+          if (isDev) {
+            console.debug("[ChatKitPanel] switch_theme", requested);
+          }
           onThemeRequest(requested as ColorScheme);
           return { success: true };
         }
         return { success: false };
       }
+
       if (invocation.name === "record_fact") {
         const id = String(invocation.params.fact_id ?? "");
         const text = String(invocation.params.fact_text ?? "");
-        if (!id || processedFacts.current.has(id)) return { success: true };
+        if (!id || processedFacts.current.has(id)) {
+          return { success: true };
+        }
         processedFacts.current.add(id);
         void onWidgetAction({
           type: "save",
@@ -308,14 +319,22 @@ export function ChatKitPanel({
         });
         return { success: true };
       }
+
       return { success: false };
     },
-    onResponseEnd: () => { onResponseEnd(); },
-    onResponseStart: () => { setErrorState({ integration: null, retryable: false }); },
-    onThreadChange: () => { processedFacts.current.clear(); },
-    onError: ({ error }: { error: unknown }) => { console.error("ChatKit error", error); },
+    onResponseEnd: () => {
+      onResponseEnd();
+    },
+    onResponseStart: () => {
+      setErrorState({ integration: null, retryable: false });
+    },
+    onThreadChange: () => {
+      processedFacts.current.clear();
+    },
+    onError: ({ error }: { error: unknown }) => {
+      console.error("ChatKit error", error);
+    },
   });
-  
 
   const activeError = errors.session ?? errors.integration;
   const blockingError = errors.script ?? activeError;
@@ -323,7 +342,7 @@ export function ChatKitPanel({
   if (isDev) {
     console.debug("[ChatKitPanel] render state", {
       isInitializingSession,
-      hasControl: Boolean(chatkit.control),
+      hasControl: Boolean(control),
       scriptStatus,
       hasError: Boolean(blockingError),
       workflowId: WORKFLOW_ID,
@@ -334,7 +353,7 @@ export function ChatKitPanel({
     <div className="relative pb-8 flex h-[90vh] w-full rounded-2xl flex-col overflow-hidden bg-white shadow-xl transition-colors">
       <ChatKit
         key={widgetInstanceKey}
-        control={chatkit.control}
+        control={control}
         className={
           blockingError || isInitializingSession
             ? "pointer-events-none opacity-0"
