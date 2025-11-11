@@ -26,7 +26,7 @@ export const GREETING = "Wie kann ich Ihnen helfen, liebe RuP-Mitarbeitenden?";
 const lightGrayscale: GrayscaleOptions = { hue: 0, tint: 8, shade: -4 };
 const darkGrayscale: GrayscaleOptions = { hue: 0, tint: 4, shade: -2 };
 const accent: AccentColor = {
-  primary: "#bb0a30",
+  primary: "#0b5fff",
   level: 2,
 };
 
