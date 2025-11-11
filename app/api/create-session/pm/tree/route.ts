@@ -6,6 +6,14 @@ import { pool } from "@/lib/pg";
 type CatRow = { id: number; name: string; parent_id: number | null };
 type PromptRow = { id: number; title: string; category_id: number };
 
+type PromptSummary = { id: number; title: string };
+type CategoryNode = {
+  id: number;
+  name: string;
+  children: CategoryNode[];
+  prompts: PromptSummary[];
+};
+
 export async function GET() {
   const client = await pool.connect();
   try {
@@ -23,29 +31,36 @@ export async function GET() {
       ORDER BY p.title ASC
     `);
 
-    const nodes = new Map<number, any>();
+    const nodes = new Map<number, CategoryNode>();
     cats.forEach((c) =>
-      nodes.set(c.id, { id: c.id, name: c.name, children: [] as any[], prompts: [] as any[] })
+      nodes.set(c.id, { id: c.id, name: c.name, children: [], prompts: [] })
     );
 
-    const roots: any[] = [];
+    const roots: CategoryNode[] = [];
     cats.forEach((c) => {
-      if (c.parent_id && nodes.has(c.parent_id)) {
-        nodes.get(c.parent_id).children.push(nodes.get(c.id));
-      } else {
-        roots.push(nodes.get(c.id));
+      const node = nodes.get(c.id);
+      if (!node) return;
+
+      const parentId = c.parent_id;
+      if (parentId !== null) {
+        const parent = nodes.get(parentId);
+        if (parent) {
+          parent.children.push(node);
+          return;
+        }
       }
+      roots.push(node);
     });
 
     prompts.forEach((p) => {
-      const n = nodes.get(p.category_id);
-      if (n) n.prompts.push({ id: p.id, title: p.title });
+      const node = nodes.get(p.category_id);
+      if (node) node.prompts.push({ id: p.id, title: p.title });
     });
 
-    const sortNode = (n: any) => {
-      n.children.sort((a: any, b: any) => a.name.localeCompare(b.name));
-      n.prompts.sort((a: any, b: any) => a.title.localeCompare(b.title));
-      n.children.forEach(sortNode);
+    const sortNode = (node: CategoryNode) => {
+      node.children.sort((a, b) => a.name.localeCompare(b.name));
+      node.prompts.sort((a, b) => a.title.localeCompare(b.title));
+      node.children.forEach(sortNode);
     };
     roots.forEach(sortNode);
 

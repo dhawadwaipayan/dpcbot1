@@ -28,19 +28,32 @@ export default function PromptSidebar({
   }, []);
 
   const lower = q.trim().toLowerCase();
-  const filter = (n: TreeNode): TreeNode | null => {
-    const p = n.prompts.filter((x) => x.title.toLowerCase().includes(lower));
-    const c = n.children.map(filter).filter(Boolean) as TreeNode[];
-    if (!lower || p.length || c.length || n.name.toLowerCase().includes(lower)) {
-      return { ...n, prompts: p, children: c };
-    }
-    return null;
-  };
 
-  const roots = useMemo(
-    () => (data ? (lower ? data.roots.map(filter).filter(Boolean) as TreeNode[] : data.roots) : []),
-    [data, lower]
-  );
+  const roots = useMemo(() => {
+    if (!data) return [];
+    if (!lower) return data.roots;
+
+    const filterNode = (node: TreeNode): TreeNode | null => {
+      const prompts = node.prompts.filter((x) =>
+        x.title.toLowerCase().includes(lower)
+      );
+      const children = node.children
+        .map(filterNode)
+        .filter((child): child is TreeNode => Boolean(child));
+      if (
+        prompts.length ||
+        children.length ||
+        node.name.toLowerCase().includes(lower)
+      ) {
+        return { ...node, prompts, children };
+      }
+      return null;
+    };
+
+    return data.roots
+      .map(filterNode)
+      .filter((node): node is TreeNode => Boolean(node));
+  }, [data, lower]);
 
   const fetchContent = async (id: number) => {
     const r = await fetch(`/api/pm/prompt_content?id=${id}`, { cache: "no-store" });

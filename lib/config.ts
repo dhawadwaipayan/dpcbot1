@@ -17,17 +17,17 @@ export const PLACEHOLDER_INPUT = "schlaue Rechtsfrage...";
 
 export const GREETING = "Wie kann ich Ihnen helfen, liebe RuP-Mitarbeitenden?";
 
-export const getThemeConfig = (_theme: ColorScheme): ThemeOption => ({
+const lightGrayscale = { hue: 0, tint: 8, shade: -4 };
+const darkGrayscale = { hue: 0, tint: 4, shade: -8 };
+const accent = {
+  primary: "#bb0a30",
+  level: 2,
+};
+
+export const getThemeConfig = (theme: ColorScheme): ThemeOption => ({
   color: {
-    grayscale: {
-      hue: 0,
-      tint: 8,
-      shade: -4,
-    },
-    accent: {
-      primary: "#bb0a30",
-      level: 2,
-    },
+    grayscale: theme === "dark" ? darkGrayscale : lightGrayscale,
+    accent,
   },
   radius: "round",
   // Add other theme options here

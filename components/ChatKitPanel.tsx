@@ -50,7 +50,7 @@ const createInitialErrors = (): ErrorState => ({
 });
 
 export function ChatKitPanel({
-  theme: _theme,
+  theme,
   onWidgetAction,
   onResponseEnd,
   onThemeRequest,
@@ -242,7 +242,7 @@ export function ChatKitPanel({
   const { control, setComposerValue, focusComposer } = useChatKit({
     locale: "de-DE",
     api: { getClientSecret },
-    theme: { colorScheme: "light", ...getThemeConfig("light") },
+    theme: { colorScheme: theme, ...getThemeConfig(theme) },
     startScreen: { greeting: GREETING, prompts: STARTER_PROMPTS },
     composer: {
       placeholder: PLACEHOLDER_INPUT,
