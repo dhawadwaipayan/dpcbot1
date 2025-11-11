@@ -257,8 +257,10 @@ export function ChatKitPanel({
             typeof action.values?.prompt_text === "string"
               ? action.values.prompt_text
               : "";
-          if (text.trim()) {
-            await setComposerValue({ text });
+          const trimmed = text.trim();
+          if (trimmed) {
+            await setComposerValue({ text: "" });
+            await setComposerValue({ text: trimmed });
             await focusComposer();
           }
         }
@@ -312,6 +314,7 @@ export function ChatKitPanel({
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) return;
+      await setComposerValue({ text: "" });
       await setComposerValue({ text: trimmed });
       await focusComposer();
     },
