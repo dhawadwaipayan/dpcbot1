@@ -63,6 +63,7 @@ type UsageEvent = ResponseUsage & { responseId?: string | null };
 
 const isBrowser = typeof window !== "undefined";
 const isDev = process.env.NODE_ENV !== "production";
+const THREADLESS_ID = "default";
 
 const createInitialErrors = (): ErrorState => ({
   script: null,
@@ -90,6 +91,10 @@ export function ChatKitPanel({
   const responseCountRef = useRef(0);
   const pendingUsageQueueRef = useRef<UsageEvent[]>([]);
   const processedResponseIdsRef = useRef(new Set<string>());
+  const currentThreadIdRef = useRef<string>(THREADLESS_ID);
+  const threadUsageRef = useRef<Record<string, Record<string, AggregatedModelUsage>>>({
+    [THREADLESS_ID]: {},
+  });
   const [sidebarMode, setSidebarMode] = useState<SidebarMode>("prompts");
   const [usageByModel, setUsageByModel] = useState<Record<string, AggregatedModelUsage>>(
     {}
@@ -102,6 +107,8 @@ export function ChatKitPanel({
   const clearUsageTracking = useCallback(() => {
     pendingUsageQueueRef.current = [];
     processedResponseIdsRef.current.clear();
+    threadUsageRef.current = { [THREADLESS_ID]: {} };
+    currentThreadIdRef.current = THREADLESS_ID;
     setUsageByModel({});
   }, []);
 
@@ -118,23 +125,40 @@ export function ChatKitPanel({
       processedResponseIdsRef.current.add(usageEvent.responseId);
     }
     pendingUsageQueueRef.current = [...pendingUsageQueueRef.current, usageEvent];
+  }, []);
+
+  const applyUsageToState = useCallback((usage: ResponseUsage) => {
     setUsageByModel((prev) => {
-      const current = prev[usageEvent.model] ?? {
-        model: usageEvent.model,
+      const current = prev[usage.model] ?? {
+        model: usage.model,
         promptTokens: 0,
         completionTokens: 0,
         totalTokens: 0,
       };
-      return {
-        ...prev,
-        [usageEvent.model]: {
-          model: usageEvent.model,
-          promptTokens: current.promptTokens + usageEvent.promptTokens,
-          completionTokens: current.completionTokens + usageEvent.completionTokens,
-          totalTokens: current.totalTokens + usageEvent.totalTokens,
-        },
+      const updated = {
+        model: usage.model,
+        promptTokens: current.promptTokens + usage.promptTokens,
+        completionTokens: current.completionTokens + usage.completionTokens,
+        totalTokens: current.totalTokens + usage.totalTokens,
       };
+      const next = { ...prev, [usage.model]: updated };
+      threadUsageRef.current[currentThreadIdRef.current] = next;
+      return next;
     });
+  }, []);
+
+  const switchToThread = useCallback((threadId: string | null) => {
+    const nextId = threadId ?? THREADLESS_ID;
+    currentThreadIdRef.current = nextId;
+    const saved = threadUsageRef.current[nextId];
+    if (saved) {
+      const clone = { ...saved };
+      threadUsageRef.current[nextId] = clone;
+      setUsageByModel(clone);
+    } else {
+      threadUsageRef.current[nextId] = {};
+      setUsageByModel({});
+    }
   }, []);
 
   useEffect(() => {
@@ -386,14 +410,19 @@ export function ChatKitPanel({
             totalTokens: latestUsage.totalTokens,
           }
         : undefined;
+      if (usagePayload) {
+        applyUsageToState(usagePayload);
+      }
       onResponseEnd(sessionIdRef.current ?? undefined, usagePayload);
     },
     onResponseStart: () => {
       setErrorState({ integration: null, retryable: false });
     },
-    onThreadChange: () => {
+    onThreadChange: ({ threadId }: { threadId: string | null }) => {
       processedFacts.current.clear();
-      clearUsageTracking();
+      pendingUsageQueueRef.current = [];
+      processedResponseIdsRef.current.clear();
+      switchToThread(threadId);
     },
     onError: ({ error }: { error: unknown }) => {
       console.error("ChatKit error", error);
@@ -402,6 +431,20 @@ export function ChatKitPanel({
       handleUsageLog(entry);
     },
   });
+
+  const handleInsertPrompt = useCallback(
+    async (text: string) => {
+      const trimmed = text.trim();
+      if (!trimmed) return;
+      await setComposerValue({ text: "" });
+      await setComposerValue({ text: trimmed });
+      await focusComposer();
+      if (onInsertPrompt) {
+        await onInsertPrompt(trimmed);
+      }
+    },
+    [focusComposer, onInsertPrompt, setComposerValue]
+  );
 
   const usageSummary = useMemo<TokenUsageSummary>(() => {
     const models = Object.values(usageByModel).sort(
