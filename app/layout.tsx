@@ -15,6 +15,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        <meta
+          name="openai-domain-verification"
+          content="domain_pk_691e945e9d48819393be36f901d6b17d0f627494e063a726"
+        />
         <Script
           src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js"
           strategy="beforeInteractive"
