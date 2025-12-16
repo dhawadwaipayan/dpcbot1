@@ -17,22 +17,9 @@ export const COMPOSER_ATTACHMENTS = {
   maxSize: 10_485_760, // 10MB
 } as const;
 
-export const COMPOSER_TOOLS = [
-  {
-    id: "search_docs",
-    label: "Search docs",
-    shortLabel: "Docs",
-    placeholderOverride: "Search documentation",
-    pinned: false,
-  },
-  {
-    id: "quick_note",
-    label: "Quick note",
-    shortLabel: "Note",
-    placeholderOverride: "Add a quick note",
-    pinned: false,
-  },
-] as const;
+// Tools disabled due to strict schema validation in current ChatKit build.
+// Re-enable with valid icons once schema is stable.
+export const COMPOSER_TOOLS: readonly [] = [];
 
 export const getThemeConfig = (theme: ColorScheme): ThemeOption => ({
   color: {
