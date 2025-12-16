@@ -29,10 +29,10 @@ export default function App() {
   }, []);
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-[#e9eef5] px-4 py-16 sm:px-8 lg:py-24">
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(0,91,187,0.08),transparent_35%),radial-gradient(circle_at_80%_10%,rgba(0,37,95,0.08),transparent_30%),radial-gradient(circle_at_50%_80%,rgba(0,37,95,0.05),transparent_35%)]" />
-      <div className="relative w-full max-w-6xl">
-        <div className="mx-auto w-full max-w-4xl rounded-[32px] border border-slate-200/80 bg-white/95 p-6 shadow-[0_24px_80px_rgba(15,23,42,0.12)] backdrop-blur sm:p-10">
+    <main className="relative flex min-h-screen items-center justify-center bg-[#f4f7fb] px-4 py-14 sm:px-8 lg:py-20">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_22%_18%,rgba(0,64,160,0.07),transparent_32%),radial-gradient(circle_at_78%_14%,rgba(0,48,120,0.06),transparent_30%),radial-gradient(circle_at_50%_78%,rgba(0,64,160,0.04),transparent_34%)]" />
+      <div className="relative w-full max-w-5xl">
+        <div className="mx-auto w-full max-w-4xl rounded-[28px] border border-slate-200 bg-white p-6 shadow-[0_18px_60px_rgba(15,23,42,0.10)] sm:p-9 lg:p-10">
           <ChatKitPanel
             theme={scheme}
             onWidgetAction={handleWidgetAction}
