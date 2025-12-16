@@ -8,6 +8,8 @@ import {
   GREETING,
   CREATE_SESSION_ENDPOINT,
   WORKFLOW_ID,
+  COMPOSER_ATTACHMENTS,
+  COMPOSER_TOOLS,
   getThemeConfig,
 } from "@/lib/config";
 import { ErrorOverlay } from "./ErrorOverlay";
@@ -273,10 +275,8 @@ export function ChatKitPanel({
     },
     composer: {
       placeholder: PLACEHOLDER_INPUT,
-      attachments: {
-        // Enable attachments
-        enabled: true,
-      },
+      attachments: COMPOSER_ATTACHMENTS,
+      tools: COMPOSER_TOOLS as unknown as [],
     },
     threadItemActions: {
       feedback: false,
@@ -344,7 +344,7 @@ export function ChatKitPanel({
   }
 
   return (
-    <div className="relative pb-8 flex h-[90vh] w-full rounded-2xl flex-col overflow-hidden bg-white shadow-sm transition-colors dark:bg-slate-900">
+    <div className="relative flex min-h-[70vh] w-full flex-col overflow-hidden rounded-[28px] border border-slate-200/70 bg-white shadow-[0_16px_60px_rgba(15,23,42,0.12)] transition-colors">
       <ChatKit
         key={widgetInstanceKey}
         control={chatkit.control}
