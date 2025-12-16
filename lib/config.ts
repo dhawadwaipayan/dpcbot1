@@ -5,11 +5,15 @@ export const WORKFLOW_ID =
 
 export const CREATE_SESSION_ENDPOINT = "/api/create-session";
 
-export const STARTER_PROMPTS: StartScreenPrompt[] = [];
+export const STARTER_PROMPTS: StartScreenPrompt[] = [
+  { title: "Summarize the vendor manual", prompt: "Summarize the key steps for onboarding vendors." },
+  { title: "Find a specific policy", prompt: "Where is the returns and refunds policy described?" },
+  { title: "Draft an email", prompt: "Draft a concise vendor onboarding email." },
+];
 
 export const PLACEHOLDER_INPUT = "Ask anything...";
 
-export const GREETING = "";
+export const GREETING = "Hi there! How can I help with the vendor manual today?";
 
 export const COMPOSER_ATTACHMENTS = {
   enabled: true,
