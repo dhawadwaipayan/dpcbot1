@@ -23,7 +23,6 @@ export const COMPOSER_TOOLS = [
     label: "Search docs",
     shortLabel: "Docs",
     placeholderOverride: "Search documentation",
-    icon: "book-open",
     pinned: false,
   },
   {
@@ -31,7 +30,6 @@ export const COMPOSER_TOOLS = [
     label: "Quick note",
     shortLabel: "Note",
     placeholderOverride: "Add a quick note",
-    icon: "pencil",
     pinned: false,
   },
 ] as const;
