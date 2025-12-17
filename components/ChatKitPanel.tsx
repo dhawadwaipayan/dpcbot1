@@ -7,7 +7,6 @@ import {
   PLACEHOLDER_INPUT,
   GREETING,
   CREATE_SESSION_ENDPOINT,
-  WORKFLOW_ID,
   getThemeConfig,
 } from "@/lib/config";
 import { ErrorOverlay } from "./ErrorOverlay";
@@ -24,6 +23,7 @@ type ChatKitPanelProps = {
   onWidgetAction: (action: FactAction) => Promise<void>;
   onResponseEnd: () => void;
   onThemeRequest: (scheme: ColorScheme) => void;
+  workflowId: string;
 };
 
 type ErrorState = {
@@ -48,6 +48,7 @@ export function ChatKitPanel({
   onWidgetAction,
   onResponseEnd,
   onThemeRequest,
+  workflowId,
 }: ChatKitPanelProps) {
   const processedFacts = useRef(new Set<string>());
   const [errors, setErrors] = useState<ErrorState>(() => createInitialErrors());
@@ -132,13 +133,13 @@ export function ChatKitPanel({
   }, [scriptStatus, setErrorState]);
 
   const isWorkflowConfigured = Boolean(
-    WORKFLOW_ID && !WORKFLOW_ID.startsWith("wf_replace")
+    workflowId && !workflowId.startsWith("wf_replace")
   );
 
   useEffect(() => {
     if (!isWorkflowConfigured && isMountedRef.current) {
       setErrorState({
-        session: "Set NEXT_PUBLIC_CHATKIT_WORKFLOW_ID in your .env.local file.",
+        session: "Workflow ID is not configured. Select a valid workflow.",
         retryable: false,
       });
       setIsInitializingSession(false);
@@ -162,14 +163,13 @@ export function ChatKitPanel({
       if (isDev) {
         console.info("[ChatKitPanel] getClientSecret invoked", {
           currentSecretPresent: Boolean(currentSecret),
-          workflowId: WORKFLOW_ID,
+          workflowId,
           endpoint: CREATE_SESSION_ENDPOINT,
         });
       }
 
       if (!isWorkflowConfigured) {
-        const detail =
-          "Set NEXT_PUBLIC_CHATKIT_WORKFLOW_ID in your .env.local file.";
+        const detail = "Workflow ID is not configured. Select a workflow.";
         if (isMountedRef.current) {
           setErrorState({ session: detail, retryable: false });
           setIsInitializingSession(false);
@@ -191,7 +191,7 @@ export function ChatKitPanel({
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            workflow: { id: WORKFLOW_ID },
+            workflow: { id: workflowId },
             chatkit_configuration: {
               // enable attachments
               file_upload: {
@@ -258,7 +258,7 @@ export function ChatKitPanel({
         }
       }
     },
-    [isWorkflowConfigured, setErrorState]
+    [isWorkflowConfigured, setErrorState, workflowId]
   );
 
   const chatkit = useChatKit({
@@ -339,7 +339,7 @@ export function ChatKitPanel({
       hasControl: Boolean(chatkit.control),
       scriptStatus,
       hasError: Boolean(blockingError),
-      workflowId: WORKFLOW_ID,
+      workflowId,
     });
   }
 

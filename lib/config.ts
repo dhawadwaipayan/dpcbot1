@@ -3,6 +3,15 @@ import { ColorScheme, StartScreenPrompt, ThemeOption } from "@openai/chatkit";
 export const WORKFLOW_ID =
   process.env.NEXT_PUBLIC_CHATKIT_WORKFLOW_ID?.trim() ?? "";
 
+export const WORKFLOW_ID_INFO =
+  process.env.NEXT_PUBLIC_CHATKIT_WORKFLOW_ID_INFO?.trim() ?? "";
+
+export const WORKFLOW_ID_FABRIC =
+  process.env.NEXT_PUBLIC_CHATKIT_WORKFLOW_ID_FABRIC?.trim() ?? "";
+
+export const WORKFLOW_ID_COSTING =
+  process.env.NEXT_PUBLIC_CHATKIT_WORKFLOW_ID_COSTING?.trim() ?? "";
+
 export const CREATE_SESSION_ENDPOINT = "/api/create-session";
 
 export const STARTER_PROMPTS: StartScreenPrompt[] = [];
