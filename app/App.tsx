@@ -1,11 +1,20 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect } from "react";
 import { ChatKitPanel, type FactAction } from "@/components/ChatKitPanel";
-import { useColorScheme } from "@/hooks/useColorScheme";
+import type { ColorScheme } from "@/hooks/useColorScheme";
 
 export default function App() {
-  const { scheme, setScheme } = useColorScheme();
+  const scheme: ColorScheme = "light";
+
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const root = document.documentElement;
+      root.dataset.colorScheme = "light";
+      root.classList.remove("dark");
+      root.style.colorScheme = "light";
+    }
+  }, []);
 
   const handleWidgetAction = useCallback(async (action: FactAction) => {
     if (process.env.NODE_ENV !== "production") {
@@ -20,13 +29,15 @@ export default function App() {
   }, []);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-end bg-slate-100 dark:bg-slate-950">
+    <main className="flex min-h-screen flex-col items-center justify-end bg-slate-100">
       <div className="mx-auto w-full max-w-5xl">
         <ChatKitPanel
           theme={scheme}
           onWidgetAction={handleWidgetAction}
           onResponseEnd={handleResponseEnd}
-          onThemeRequest={setScheme}
+          onThemeRequest={() => {
+            /* light-only */
+          }}
         />
       </div>
     </main>
