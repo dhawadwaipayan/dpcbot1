@@ -13,7 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" data-color-scheme="light">
+    <html lang="en">
       <head>
         <meta
           name="openai-domain-verification"
