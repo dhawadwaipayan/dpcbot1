@@ -158,6 +158,19 @@ export function ChatKitPanel({
     setWidgetInstanceKey((prev) => prev + 1);
   }, []);
 
+  // When workflow changes, remount the ChatKit instance so it picks up the new workflow ID.
+  useEffect(() => {
+    processedFacts.current.clear();
+    if (isBrowser) {
+      setScriptStatus(
+        window.customElements?.get("openai-chatkit") ? "ready" : "pending"
+      );
+    }
+    setIsInitializingSession(true);
+    setErrors(createInitialErrors());
+    setWidgetInstanceKey((prev) => prev + 1);
+  }, [workflowId]);
+
   const getClientSecret = useCallback(
     async (currentSecret: string | null) => {
       if (isDev) {
