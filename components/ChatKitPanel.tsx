@@ -205,6 +205,7 @@ export function ChatKitPanel({
           },
           body: JSON.stringify({
             workflow: { id: workflowId },
+            workflowKey: workflowId,
             chatkit_configuration: {
               // enable attachments
               file_upload: {

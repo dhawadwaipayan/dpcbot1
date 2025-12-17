@@ -6,6 +6,7 @@ interface CreateSessionRequestBody {
   workflow?: { id?: string | null } | null;
   scope?: { user_id?: string | null } | null;
   workflowId?: string | null;
+  workflowKey?: string | null;
   chatkit_configuration?: {
     file_upload?: {
       enabled?: boolean;
@@ -14,7 +15,7 @@ interface CreateSessionRequestBody {
 }
 
 const DEFAULT_CHATKIT_BASE = "https://api.openai.com";
-const SESSION_COOKIE_NAME = "chatkit_session_id";
+const SESSION_COOKIE_BASE = "chatkit_session_id";
 const SESSION_COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 export async function POST(request: Request): Promise<Response> {
@@ -37,8 +38,14 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const parsedBody = await safeParseJson<CreateSessionRequestBody>(request);
+    const workflowKey =
+      parsedBody?.workflowKey ??
+      parsedBody?.workflow?.id ??
+      parsedBody?.workflowId ??
+      "default";
+
     const { userId, sessionCookie: resolvedSessionCookie } =
-      await resolveUserId(request);
+      await resolveUserId(request, workflowKey);
     sessionCookie = resolvedSessionCookie;
     const resolvedWorkflowId =
       parsedBody?.workflow?.id ?? parsedBody?.workflowId ?? WORKFLOW_ID;
@@ -146,16 +153,18 @@ function methodNotAllowedResponse(): Response {
   });
 }
 
-async function resolveUserId(request: Request): Promise<{
+async function resolveUserId(
+  request: Request,
+  workflowKey: string
+): Promise<{
   userId: string;
   sessionCookie: string | null;
+  cookieName: string;
 }> {
-  const existing = getCookieValue(
-    request.headers.get("cookie"),
-    SESSION_COOKIE_NAME
-  );
+  const cookieName = `${SESSION_COOKIE_BASE}_${workflowKey}`;
+  const existing = getCookieValue(request.headers.get("cookie"), cookieName);
   if (existing) {
-    return { userId: existing, sessionCookie: null };
+    return { userId: existing, sessionCookie: null, cookieName };
   }
 
   const generated =
@@ -164,8 +173,9 @@ async function resolveUserId(request: Request): Promise<{
       : Math.random().toString(36).slice(2);
 
   return {
-    userId: generated,
-    sessionCookie: serializeSessionCookie(generated),
+    userId: `${workflowKey}_${generated}`,
+    sessionCookie: serializeSessionCookie(cookieName, generated),
+    cookieName,
   };
 }
 
@@ -190,9 +200,9 @@ function getCookieValue(
   return null;
 }
 
-function serializeSessionCookie(value: string): string {
+function serializeSessionCookie(cookieName: string, value: string): string {
   const attributes = [
-    `${SESSION_COOKIE_NAME}=${encodeURIComponent(value)}`,
+    `${cookieName}=${encodeURIComponent(value)}`,
     "Path=/",
     `Max-Age=${SESSION_COOKIE_MAX_AGE}`,
     "HttpOnly",
